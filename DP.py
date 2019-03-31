@@ -18,12 +18,12 @@ def solver_hengrui(x, s):
     mat = np.zeros([n, n]) - 1
     # the matrix to trace back the reboot time
     trace = np.zeros([n, n], dtype = np.int) - 1
-    
+
     # no reboot case, from i to j inclusive
     def basic_process(i, j):
         res = 0
         for k in range(j-i+1):
-            # check the minimum between capability and data volumn
+            # check the minimum between capability and data volume
             res = res + min(x[i+k], s[k])
         return res
     
@@ -52,14 +52,42 @@ def solver_hengrui(x, s):
         if reboot < 0:
             return []
         return find_reboot(i, reboot-1)+[reboot]+find_reboot(reboot+1, j)
-    
+
+    # find the amount of data processed on each day
+    def get_data_processed(reboot_days):
+        data_processed = []
+        x_index = 0
+        s_index = 0
+        reboot_index = 0
+        while len(data_processed) < len(x):
+            # if there are no more reboot days, then we don't have to worry about it
+            if reboot_index >= len(reboot_days):
+                data_processed.append(min(x[x_index], s[s_index]))
+                x_index = x_index + 1
+                s_index = s_index + 1
+            else:
+                # if we reboot, no data is processed and s starts over from the beginning
+                if reboot_days[reboot_index] == x_index:
+                    data_processed.append(0)
+                    reboot_index = reboot_index + 1
+                    x_index = x_index + 1
+                    s_index = 0
+                else:
+                    data_processed.append(min(x[x_index], s[s_index]))
+                    x_index = x_index + 1
+                    s_index = s_index + 1
+
+        return data_processed
+
     res = optimal_process(0, n-1)
     reboot = find_reboot(0, n-1)
-    print(res)
-    # print(trace)
-    print(reboot)
-    # THE REQUIRED RESULT IS NOT PRINTED YET
-    
+    data_processed = get_data_processed(reboot)
+    # Print total data processed
+    print(int(res))
+    # Print data processed on each day
+    for i in data_processed:
+        print(int(i), end=" ")
+
 
 if __name__ == "__main__":
     # basic example
@@ -69,5 +97,4 @@ if __name__ == "__main__":
     x = [20, 80, 20, 60, 20, 60, 80, 10, 40, 10]
     s = [100, 90, 50, 45, 40, 35, 20, 15, 10, 5]
     solver_hengrui(x, s)
-    # current result is 365, with a reboot at 4
-    
+    # current result is 365, with a reboot at day 4
